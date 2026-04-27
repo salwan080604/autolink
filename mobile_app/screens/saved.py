@@ -15,7 +15,6 @@ def _haversine(lat1, lon1, lat2, lon2):
             * math.sin(dlon / 2) ** 2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-# NEW: Replaced ipapi logic with hardware GPS logic
 async def _get_my_location_geo(geo):
     """Returns (lat, lng, city) using device GPS. Falls back to None on error."""
     try:
@@ -75,28 +74,6 @@ def _get_city(lat, lng):
     except Exception:
         return "this area"
 
-def _get_weather(lat, lng):
-    try:
-        r = requests.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude":      lat,
-                "longitude":     lng,
-                "current":       "temperature_2m,weather_code",
-                "forecast_days": 1,
-            },
-            timeout=8,
-        )
-        r.raise_for_status()
-        data = r.json()
-        return (
-            data["current"]["temperature_2m"],
-            data["current_units"]["temperature_2m"],
-            data["current"]["weather_code"],
-        )
-    except Exception:
-        return None, None, None
-
 def saved_screen(page: ft.Page, go_to, geo=None):
     col    = ft.Column(spacing=12)
     status = ft.Text("", color=TEXT_LIGHT, text_align=ft.TextAlign.CENTER)
@@ -138,7 +115,6 @@ def saved_screen(page: ft.Page, go_to, geo=None):
         location_status.value = ""
         page.update()
 
-        # UPDATED: Calling the new geo-sensor function
         lat, lng, city = await _get_my_location_geo(geo)
 
         if lat is None:
@@ -162,16 +138,43 @@ def saved_screen(page: ft.Page, go_to, geo=None):
         images  = v.get("images", [])
         img_url = images[0]["image"] if images else None
 
-        weather_text = ft.Text(
-            "Fetching weather…",
-            size=12, color=TEXT_LIGHT, italic=True, no_wrap=False,
-        )
+        from screens.weather_service import weather_service
+        weather_text = ft.Text("Loading weather...", size=12, color=TEXT_LIGHT)
         weather_container = ft.Container(
             content=weather_text,
-            bgcolor="#f0f4ff", border_radius=6,
-            padding=ft.Padding(10, 6, 10, 6),
-            margin=ft.Margin(0, 4, 0, 0),
+            bgcolor="#f0f4ff",
+            border_radius=6,
+            padding=10,
         )
+
+        async def load_weather():
+            parts = v.get("gps_coor", "").split(",")
+
+            if len(parts) != 2:
+                weather_text.value = "No location data"
+                page.update()
+                return
+
+            try:
+                lat = float(parts[0].strip())
+                lng = float(parts[1].strip())
+            except:
+                weather_text.value = "Invalid coordinates"
+                page.update()
+                return
+
+            result = await weather_service.get_weather(
+                v["id"],
+                lat,
+                lng,
+                (_get_city, _weather_desc, _maybe_visit)
+            )
+
+            weather_text.value = result["text"]
+            weather_container.bgcolor = result["bg"]
+            page.update()
+
+        page.run_task(load_weather)
 
         dist_badge = ft.Container(
             visible=distance_km is not None,
@@ -238,45 +241,6 @@ def saved_screen(page: ft.Page, go_to, geo=None):
                 content=ft.Column([img_box, info], spacing=0),
             ),
         )
-
-        def _load_weather(gps):
-            if not gps:
-                weather_text.value        = "Location not set for this listing."
-                weather_container.bgcolor = "#f5f5f5"
-                page.update()
-                return
-            try:
-                parts = gps.split(",")
-                lat   = float(parts[0].strip())
-                lng   = float(parts[1].strip())
-            except (ValueError, IndexError):
-                weather_text.value = "Invalid coordinates."
-                page.update()
-                return
-
-            city             = _get_city(lat, lng)
-            temp, unit, code = _get_weather(lat, lng)
-
-            if temp is not None:
-                vtype    = v.get("type_of_vehicle", "vehicle").lower()
-                sentence = (
-                    f"This {vtype} is listed in {city}, "
-                    f"currently {temp}{unit} and {_weather_desc(code)} "
-                    f"— {_maybe_visit(code)}"
-                )
-                weather_text.value        = sentence
-                weather_text.italic       = False
-                weather_text.color        = TEXT_DARK
-                weather_container.bgcolor = "#fff3e0" if code >= 61 else "#f0f4ff"
-            else:
-                weather_text.value        = f"Weather unavailable for {city}."
-                weather_container.bgcolor = "#f5f5f5"
-
-            page.update()
-
-        threading.Thread(
-            target=_load_weather, args=(v.get("gps_coor", ""),)
-        ).start()
 
         return card
 

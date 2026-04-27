@@ -1,4 +1,3 @@
-# shared.py
 # ─────────────────────────────────────────────────────────────
 # SHARED MODULE — Do NOT modify without telling the whole team
 # Contains: API class, theme colors, helper components,
@@ -97,7 +96,6 @@ class API:
 
 # Global API instance — import this in every screen
 api = API()
-
 
 # ── REUSABLE UI COMPONENTS ────
 
