@@ -1,7 +1,4 @@
-# screens/detail.py
-# ─────────────────────────────────────────────────────────────
 # VEHICLE DETAIL SCREEN WITH IMAGE CAROUSEL + MINI MAP
-# ─────────────────────────────────────────────────────────────
 
 import flet as ft
 import threading
@@ -18,9 +15,7 @@ def detail_screen(page, go_to):
         go_to("home")
         return ft.View(route="/detail")
 
-    # -----------------------------
     # SAVE BUTTON
-    # -----------------------------
     saved_ids = set()
     if api.token:
         try:
@@ -59,9 +54,7 @@ def detail_screen(page, go_to):
 
     save_box.on_click = toggle
 
-    # -----------------------------
     # INFO ROW
-    # -----------------------------
     def irow(icon, lbl, val):
         return ft.Row([
             ft.Icon(icon, size=18, color=PRIMARY),
@@ -69,9 +62,7 @@ def detail_screen(page, go_to):
             ft.Text(str(val), size=13, color=TEXT_LIGHT, expand=True),
         ])
 
-    # -----------------------------
     # IMAGE CAROUSEL
-    # -----------------------------
     images = vehicle.get("images", [])
     img_count = max(len(images), 1)
     current_index = {"i": 0}
@@ -147,9 +138,7 @@ def detail_screen(page, go_to):
         ]
     )
 
-    # -----------------------------
     # MINI MAP (NEW FEATURE)
-    # -----------------------------
     gps = vehicle.get("gps_coor", "-20.1609,57.5012")
 
     try:
@@ -186,9 +175,8 @@ def detail_screen(page, go_to):
         ),
     )
 
-    # -----------------------------
+
     # WHATSAPP BUTTON
-    # -----------------------------
     wa = ft.Container(
         content=ft.Row([
             ft.Icon(ft.Icons.CHAT, color="white", size=16),
@@ -205,9 +193,8 @@ def detail_screen(page, go_to):
         ),
     ) if vehicle.get("contact") else ft.Container()
 
-    # -----------------------------
+
     # VIEW
-    # -----------------------------
     return ft.View(
         route="/detail",
         bgcolor=BG,

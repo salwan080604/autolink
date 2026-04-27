@@ -148,7 +148,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // Converts raw price to display-friendly format (e.g., 1M, 80k)
+        // Converts raw price to display-friendly format 
         function formatPrice(value) {
             if (value >= 1000000) return (value / 1000000).toFixed(2) + 'M';
             if (value >= 1000) return (value / 1000).toFixed(2) + 'k';
@@ -185,8 +185,8 @@
                 icon: L.divIcon({
                     className: 'price-marker',
                     html: `<div class="marker-text" style="color: ${markerColor};font-weight: bold;">${formatPrice(rawPrice)}</div>`,
-                    iconSize: [60, 30], // width x height in pixels
-                    iconAnchor: [30, 30] // anchor in middle bottom
+                    iconSize: [60, 30], 
+                    iconAnchor: [30, 30]
                 })
             }).addTo(map);
 

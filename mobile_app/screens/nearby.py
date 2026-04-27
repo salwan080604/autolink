@@ -5,9 +5,8 @@ import math
 
 from shared import api, nav, PRIMARY, BG, APP_STATE
 
-# -----------------------------
+
 # CONFIG
-# -----------------------------
 DEFAULT_ZOOM = 13
 TILE_URL = "https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}"
 
@@ -15,9 +14,8 @@ FALLBACK_LAT = -20.3185
 FALLBACK_LNG = 57.5260
 
 
-# -----------------------------
+
 # FORMAT PRICE (FIXED)
-# -----------------------------
 def format_price(price):
     try:
         val = float(price)
@@ -34,9 +32,8 @@ def format_price(price):
         return "?"
 
 
-# -----------------------------
+
 # ROUTE API (OSRM)
-# -----------------------------
 def get_route(user_lat, user_lng, v_lat, v_lng):
     url = (
         f"http://router.project-osrm.org/route/v1/driving/"
@@ -53,9 +50,7 @@ def get_route(user_lat, user_lng, v_lat, v_lng):
     ]
 
 
-# -----------------------------
 # MAIN SCREEN
-# -----------------------------
 def nearby_screen(page: ft.Page, go_to, geo=None):
 
     user_location = {"lat": FALLBACK_LAT, "lng": FALLBACK_LNG}
@@ -68,9 +63,8 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
 
     map_container = ft.Container(expand=True)
 
-    # -----------------------------
+    
     # ACTION BAR
-    # -----------------------------
     action_bar = ft.Container(
     visible=False,
     bgcolor="white",
@@ -147,9 +141,8 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
 )
 
 
-    # -----------------------------
+    
     # MARKER CLICK
-    # -----------------------------
     def on_marker_click(vehicle):
         state["selected"] = vehicle
 
@@ -165,16 +158,13 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
         action_bar.visible = True
         page.update()
 
-    # -----------------------------
+
     # VIEW DETAILS
-    # -----------------------------
     def view_details():
         APP_STATE["sv"] = state["selected"]
         go_to("detail")
 
-    # -----------------------------
     # GET DIRECTIONS
-    # -----------------------------
     def get_directions():
         v = state["selected"]
         if not v:
@@ -196,9 +186,8 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
         except Exception as e:
             print("Route error:", e)
 
-    # -----------------------------
+
     # BUILD MARKERS
-    # -----------------------------
     def build_markers():
         markers = []
 
@@ -247,9 +236,7 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
 
         return markers
 
-    # -----------------------------
     # MAP RENDER
-    # -----------------------------
     def render_map():
 
         layers = [
@@ -285,9 +272,7 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
 
         page.update()
 
-    # -----------------------------
     # LOAD DATA
-    # -----------------------------
     def fetch_data():
         try:
             state["vehicles"] = api.vehicles()
@@ -296,9 +281,7 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
             map_container.content = ft.Text("Failed to load vehicles", color="red")
             page.update()
 
-    # -----------------------------
     # LIVE LOCATION
-    # -----------------------------
     def on_position_change(e):
         user_location["lat"] = e.position.latitude
         user_location["lng"] = e.position.longitude
@@ -325,9 +308,7 @@ def nearby_screen(page: ft.Page, go_to, geo=None):
 
         page.run_task(start)
 
-    # -----------------------------
     # UI
-    # -----------------------------
     ui = ft.Column(
         expand=True,
         controls=[
