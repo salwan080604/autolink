@@ -6,10 +6,9 @@ from Profile.models import SavedVehicle
 from Users.models import UserProfile
 
 
-# ------------------------------------
+
 # Vehicle Image Serializer
 # Converts each image of a vehicle into a URL string
-# ------------------------------------
 class VehicleImageSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 
@@ -25,10 +24,8 @@ class VehicleImageSerializer(serializers.ModelSerializer):
         return None
 
 
-# ------------------------------------
 # Vehicle Serializer
 # Converts a Vehicle object to JSON with all its details
-# ------------------------------------
 class VehicleSerializer(serializers.ModelSerializer):
     images = VehicleImageSerializer(many=True, read_only=True)
     uploader_name = serializers.SerializerMethodField()
@@ -47,10 +44,8 @@ class VehicleSerializer(serializers.ModelSerializer):
         return obj.uploader.get_full_name() or obj.uploader.username
 
 
-# ------------------------------------
 # Review Serializer
 # Converts a Review object to JSON
-# ------------------------------------
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -60,20 +55,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
 
 
-# ------------------------------------
 # Review Submit Serializer
 # Used when the Flet app POSTS a new review
-# ------------------------------------
 class ReviewSubmitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['title', 'review_text', 'rating', 'author_name', 'email']
 
 
-# ------------------------------------
 # User Registration Serializer
 # Used when a new user registers from the Flet app
-# ------------------------------------
 class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
