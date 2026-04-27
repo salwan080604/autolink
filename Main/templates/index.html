@@ -26,8 +26,20 @@
                     {% endwith %}
                 {% endif %}
 
-                <a href="{% url 'vehicles:standardsearch' %}" class="btn-primary"><i class="fas fa-search"></i> Browse Vehicles</a>
+                <a href="{% url 'vehicles:standardsearch' %}" class="btn-primary"> Explore All Vehicles</a>
             </div>
+
+            <!-- AJAX Live Search Box -->
+            <div class="hero-search-wrap">
+                <div class="hero-search-box">
+                    <i class="fas fa-search hero-search-icon"></i>
+                    <input type="text" id="hero-search-input"
+                           placeholder="Quick search — type a make or model..."
+                           autocomplete="off">
+                </div>
+                <div id="hero-search-results" class="hero-search-results" style="display:none;"></div>
+            </div>
+        </div>
         </div>
     </div>
 
@@ -358,6 +370,9 @@
                         {% endfor %}
                     {% endif %}
 
+                    <!-- AJAX response message — shown/hidden by jQuery -->
+                    <div id="contact-ajax-message" style="display:none;" class="contact-ajax-msg"></div>
+
                     <form method="post" enctype="multipart/form-data" class="contact-form">
                         {% csrf_token %}
 
@@ -420,6 +435,8 @@
     </div>
     {% include 'footer.html' %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery — must be loaded BEFORE main.js (Agenda 11) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="{% static 'main.js' %}"></script>
 </body>
 </html>
