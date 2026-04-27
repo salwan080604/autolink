@@ -1,15 +1,14 @@
 import flet as ft
 import flet_camera as fc
-import threading
+import threading, asyncio
 from shared import api, big_btn, nav
 from shared import PRIMARY, ACCENT, BG, TEXT_DARK, TEXT_LIGHT, ERROR, SUCCESS
-
 
 def profile_screen(page: ft.Page, go_to):
     col  = ft.Column(spacing=10, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
     spin = ft.ProgressRing(visible=True, color=PRIMARY, width=30, height=30)
 
-    photo_path   = [None]
+    photo_path = [None]
     user_initial = ["U"]
 
     avatar_image = ft.Image(
@@ -41,20 +40,22 @@ def profile_screen(page: ft.Page, go_to):
     )
 
     def _show_photo(path):
-        photo_path[0]           = path
-        avatar_image.src        = path
-        avatar_image.visible    = True
+        photo_path[0] = path
+        avatar_image.src = path
+        avatar_image.visible = True
         avatar_initials.visible = False
+        delete_btn.visible = True
         page.update()
 
     def _clear_photo():
-        photo_path[0]           = None
-        avatar_image.src        = ""
-        avatar_image.visible    = False
+        photo_path[0] = None
+        avatar_image.src = ""
+        avatar_image.visible = False
         avatar_initials.visible = True
-        cam_container.visible   = False
-        cam_btn.text            = "Change Photo"
-        cam_btn.icon            = ft.Icons.CAMERA_ALT
+        cam_container.visible = False
+        cam_btn.text = "Change Photo"
+        cam_btn.icon = ft.Icons.CAMERA_ALT
+        delete_btn.visible = False
         page.update()
 
     cam = fc.Camera(expand=True, preview_enabled=True)
@@ -80,27 +81,28 @@ def profile_screen(page: ft.Page, go_to):
                 page.snack_bar = ft.SnackBar(ft.Text(f"Camera error: {err}"))
                 page.snack_bar.open = True
                 page.update()
+
         else:
             cam_container.visible = True
             page.update()
+
             try:
                 cameras = await cam.get_available_cameras()
+
                 if not cameras:
                     page.snack_bar = ft.SnackBar(ft.Text("No camera found."))
                     page.snack_bar.open = True
                     page.update()
                     return
 
-                front = next(
-                    (c for c in cameras if c.lens_direction == fc.CameraLensDirection.FRONT),
-                    cameras[0]
-                )
-
                 await cam.initialize(
-                    description=front,
+                    description=next(
+                        (c for c in cameras if c.lens_direction == fc.CameraLensDirection.FRONT),
+                        cameras[0]
+                    ),
                     resolution_preset=fc.ResolutionPreset.MEDIUM,
                 )
-                
+
                 cam_btn.text = "Snap Selfie!"
                 cam_btn.icon = ft.Icons.CAMERA
                 page.update()
@@ -110,7 +112,7 @@ def profile_screen(page: ft.Page, go_to):
                 page.snack_bar.open = True
                 cam_container.visible = False
                 page.update()
-                
+                        
     cam_btn = ft.ElevatedButton(
         "Change Photo",
         icon=ft.Icons.CAMERA_ALT,
@@ -136,33 +138,42 @@ def profile_screen(page: ft.Page, go_to):
         content=battery_text,
     )
 
-    async def _check_battery():
+    async def _watch_battery():
         try:
             bat = ft.Battery()
-            level = await bat.get_battery_level()
-            state = await bat.get_battery_state()
-            
-            is_charging = state == ft.BatteryState.CHARGING or state == ft.BatteryState.FULL
 
-            if is_charging or level >= 50:
-                battery_banner.bgcolor = "#e8f5e9"
-                status_msg = "(charging)" if is_charging else "— all good!"
-                battery_text.value = f"🟢 Battery: {level}% {status_msg}"
-                battery_text.color = "#2e7d32"
-            elif level >= 20:
-                battery_banner.bgcolor = "#fff3e0"
-                battery_text.value = f"🟠 Battery low: {level}% — consider charging soon."
-                battery_text.color = "#e65100"
-            else:
-                battery_banner.bgcolor = "#ffebee"
-                battery_text.value = f"🔴 Battery critical: {level}% — plug in now!"
-                battery_text.color = ERROR
+            while True:
+                level = await bat.get_battery_level()
+                state = await bat.get_battery_state()
 
-            battery_banner.visible = True
+                is_charging = (
+                    state == ft.BatteryState.CHARGING
+                    or state == ft.BatteryState.FULL
+                )
+
+                if is_charging or level >= 50:
+                    battery_banner.bgcolor = "#e8f5e9"
+                    status_msg = "(charging)" if is_charging else "— all good!"
+                    battery_text.value = f"🟢 Battery: {level}% {status_msg}"
+                    battery_text.color = "#2e7d32"
+
+                elif level >= 20:
+                    battery_banner.bgcolor = "#fff3e0"
+                    battery_text.value = f"🟠 Battery low: {level}% — consider charging soon."
+                    battery_text.color = "#e65100"
+
+                else:
+                    battery_banner.bgcolor = "#ffebee"
+                    battery_text.value = f"🔴 Battery critical: {level}% — plug in now!"
+                    battery_text.color = ERROR
+
+                battery_banner.visible = True
+                page.update()
+
+                await asyncio.sleep(0.5)
+
         except Exception as e:
-            print(f"Battery Check Error: {e}") # Debugging
-            pass
-        page.update()
+            print("Battery watch error:", e)
 
     def do_logout():
         threading.Thread(target=api.logout).start()
@@ -250,16 +261,7 @@ def profile_screen(page: ft.Page, go_to):
                 ]
 
                 page.update()
-
-                def _watch_photo():
-                    import time
-                    while True:
-                        time.sleep(0.5)
-                        delete_btn.visible = photo_path[0] is not None
-                        page.update()
-                threading.Thread(target=_watch_photo, daemon=True).start()
-
-                page.run_task(_check_battery)
+                page.run_task(_watch_battery)
 
             except Exception as ex:
                 spin.visible = False

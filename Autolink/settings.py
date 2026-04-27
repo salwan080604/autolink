@@ -1,4 +1,3 @@
-#bysalwan
 """
 Django settings for Autolink project.
 

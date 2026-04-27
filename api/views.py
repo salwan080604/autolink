@@ -247,24 +247,6 @@ class DeleteVehicleAPI(APIView):
         vehicle.delete()
         return Response({'message': 'Vehicle deleted successfully.'})
     
-
-
-class ProfileAPI(APIView):
-    """
-    GET /api/profile/
-    Header: Authorization: Token <token>
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        try:
-            profile    = UserProfile.objects.get(user=request.user)
-            serializer = UserProfileSerializer(profile)
-            return Response(serializer.data)
-        except UserProfile.DoesNotExist:
-            return Response({'error': 'Profile not found.'}, status=404)
-
-
 # ============================================================
 # VEHICLE ENDPOINTS
 # ============================================================
@@ -479,10 +461,21 @@ class VehicleReportAPI(APIView):
             return Response({'error': str(ex)}, status=400)
 
 
-# ============================================================
-# SAVED VEHICLES ENDPOINTS
-# ============================================================
+class ProfileAPI(APIView):
+    """
+    GET /api/profile/
+    Header: Authorization: Token <token>
+    """
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        try:
+            profile    = UserProfile.objects.get(user=request.user)
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'Profile not found.'}, status=404)
+        
 class SavedVehiclesAPI(APIView):
     """
     GET /api/saved/
@@ -500,7 +493,6 @@ class SavedVehiclesAPI(APIView):
             saved, many=True, context={'request': request}
         )
         return Response(serializer.data)
-
 
 class ToggleSaveAPI(APIView):
     """
@@ -524,7 +516,6 @@ class ToggleSaveAPI(APIView):
             return Response({'saved': False, 'message': 'Vehicle removed from saved.'})
 
         return Response({'saved': True, 'message': 'Vehicle saved!'})
-
 
 class SavedVehiclesSortedAPI(APIView):
     """

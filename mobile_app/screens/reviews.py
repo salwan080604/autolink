@@ -5,7 +5,7 @@ import time
 import datetime
 
 ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_API_KEY_HERE"
-BASE_URL = "http://192.168.1.78:8000/api"
+BASE_URL = "http://127.0.0.1:8000/api"
 
 PRIMARY    = "#1a237e"
 ACCENT     = "#ff6f00"
@@ -516,7 +516,7 @@ def reviews_screen(page, go_to):
                 render_reviews(all_reviews)
             except Exception as ex:
                 spinner.visible = False
-                status_text.value = f"Could not load: {ex}"
+                status_text.value = ""
                 page.update()
         threading.Thread(target=fetch).start()
 

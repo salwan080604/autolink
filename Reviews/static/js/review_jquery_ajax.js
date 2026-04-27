@@ -83,6 +83,7 @@
 //         overlay.appendChild(modal);
 
 //         return overlay;
+
 //     }
 
 //     // Handle form submission
@@ -109,8 +110,10 @@
 /*By Bukreedan Humaa Id:2412290*/
 //Jquery version of the above code for the review form :
 // Wait for the page to fully load before running the script
+
 $(document).ready(function () {
 
+    
     // Grab all the elements we need from the page
     var $starContainer = $('#starRating');
     var $ratingInput   = $('#ratingValue');
