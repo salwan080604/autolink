@@ -24,8 +24,6 @@ body, html {
     background-position: center 55%;
 }
 
-
-
 .hero-section::before {
     content: "";
     position: absolute;
@@ -143,8 +141,8 @@ body, html {
 
 .chart-wrapper {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 100%;
+    max-width: 350px;
 }
 
 #categoryChart {
@@ -171,6 +169,34 @@ body, html {
     font-size: 15px;
     color: #64748b;
     font-weight: 500;
+}
+
+/* AJAX Stats Styling */
+.stats-donut-style {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 35px 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    min-height: 450px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.loading-spinner i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .categories-grid {
@@ -275,6 +301,7 @@ body, html {
 .recent-card:hover {
     transform: translateY(-5px);
     border-color: #d97706;
+    box-shadow: 0 8px 20px rgba(30, 58, 138, 0.15);
 }
 
 .recent-image-wrapper {
@@ -365,6 +392,7 @@ body, html {
     font-size: 15px;
     border: 1px solid #e2e8f0;
     flex-shrink: 0;
+    transition: all 0.3s ease;
 }
 
 .recent-link:hover {
@@ -388,6 +416,7 @@ body, html {
     border-radius: 50px;
     font-weight: 600;
     font-size: 15px;
+    transition: all 0.3s ease;
 }
 
 .recent-view-all-bottom:hover {
@@ -463,6 +492,7 @@ body, html {
     border-radius: 50px;
     font-weight: 600;
     font-size: 15px;
+    transition: all 0.3s ease;
 }
 
 .simple-btn:hover {
@@ -513,6 +543,7 @@ body, html {
     align-items: center;
     justify-content: center;
     margin: 0 auto 25px auto;
+    transition: all 0.3s ease;
 }
 
 .feature-card:hover .feature-icon {
@@ -529,6 +560,7 @@ body, html {
     font-weight: 700;
     color: #2c3e50;
     margin-bottom: 15px;
+    transition: color 0.3s ease;
 }
 
 .feature-card:hover h3 {
@@ -662,6 +694,12 @@ body, html {
     align-items: center;
     justify-content: center;
     font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-btn:hover {
+    background: #d97706;
 }
 
 .carousel-btn:disabled {
@@ -762,6 +800,7 @@ body, html {
 .service-item:hover {
     transform: translateX(5px);
     border-color: #d97706;
+    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.12);
 }
 
 .service-number {
@@ -772,6 +811,7 @@ body, html {
     min-width: 50px; 
     opacity: 0.7;
     margin-top: 3.2px; 
+    transition: color 0.3s ease;
 }
 
 .service-item:hover .service-number {
@@ -841,6 +881,12 @@ body, html {
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.08);
     border-left: 4px solid #d97706;
+    transition: all 0.3s ease;
+}
+
+.contact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.12);
 }
 
 .contact-card i {
@@ -956,6 +1002,7 @@ body, html {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
+    border-color: #0f766e;
 }
 
 .form-group textarea {
@@ -1002,21 +1049,21 @@ body, html {
     justify-content: center;
     gap: 8px;
     margin-top: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .contact-submit-btn:hover {
     background: #d97706;
+    transform: translateY(-2px);
 }
 
 /* Form buttons container */
 .form-buttons {
-    display: flex;
+    display: grid;
+    grid-template-columns: 2fr 1fr; 
     gap: 16px;
     margin-top: 8px;
-}
-
-.form-buttons button {
-    flex: 1;
 }
 
 /* Reset button styles */
@@ -1024,9 +1071,9 @@ body, html {
     background: #6b7280;
     color: #ffffff;
     border: none;
-    padding: 16px 32px;
+    padding: 12px 16px;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -1039,23 +1086,6 @@ body, html {
 .contact-reset-btn:hover {
     background: #4b5563;
     transform: translateY(-2px);
-}
-
-.form-buttons {
-    display: grid;
-    grid-template-columns: 2fr 1fr; 
-    gap: 16px;
-    margin-top: 8px;
-}
-
-.contact-submit-btn {
-    padding: 16px 32px;
-    font-size: 16px;
-}
-
-.contact-reset-btn {
-    padding: 12px 16px;
-    font-size: 14px;
 }
 
 /* Hero Search Wrap */
@@ -1180,13 +1210,11 @@ body, html {
 .search-see-all {
     display: block;
     text-align: center;
-    padding: 12px;
+    padding: 12px 16px;
     color: #1a237e;
     font-weight: 600;
     font-size: 13px;
     text-decoration: none;
-    border-top: 1px solid #e5e7f0;
-    background: #f8faff;
     transition: background 0.15s;
 }
 
@@ -1201,52 +1229,14 @@ body, html {
     font-weight: 500;
 }
 
-.contact-success {
-    background: #f0fdf4;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
-}
-
 .contact-error {
     background: #fef2f2;
     color: #dc2626;
     border: 1px solid #fecaca;
 }
 
-/* ── VIEW JSON LINK ─────────────────────────────────────── */
-.search-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid #e5e7f0;
-    background: #f8faff;
-}
-
-.search-view-json {
-    display: block;
-    padding: 10px 16px;
-    color: #6b7280;
-    font-size: 12px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.15s;
-}
-
 .search-view-json:hover { color: #1a237e; }
 .search-view-json i { margin-right: 4px; }
-
-.search-see-all {
-    display: block;
-    text-align: center;
-    padding: 12px 16px;
-    color: #1a237e;
-    font-weight: 600;
-    font-size: 13px;
-    text-decoration: none;
-    transition: background 0.15s;
-}
-
-.search-see-all:hover { background: #eef2ff; }
 
 /* ── LOGIN PROMPT BANNER ────────────────────────────────── */
 .login-prompt-banner {

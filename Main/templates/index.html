@@ -34,7 +34,7 @@
                 <div class="hero-search-box">
                     <i class="fas fa-search hero-search-icon"></i>
                     <input type="text" id="hero-search-input"
-                           placeholder="Quick search — type a make or model..."
+                           placeholder="Search by make or model..."
                            autocomplete="off">
                 </div>
                 <div id="hero-search-results" class="hero-search-results" style="display:none;"></div>
@@ -44,7 +44,7 @@
     </div>
 
     <div class="hero-container">
-        <!-- Category Browser Section -->
+        <!-- Category Browser Section - ORIGINAL DONUT CHART RESTORED -->
         <div class="category-browser">
             <div class="section-header">
                 <h2 class="section-header-title">Browse by Category</h2>
@@ -52,12 +52,12 @@
             </div>
 
             <div class="categories-container">
-                <!-- Donut Chart -->
+                <!-- Original Donut Chart -->
                 <div class="chart-section">
                     <div class="chart-wrapper">
                         <canvas id="categoryChart" width="200" height="200"></canvas>
                         <div class="chart-center">
-                            <span class="chart-total">{{ total_vehicles }}</span>
+                            <span class="chart-total" id="chart-live-total">{{ total_vehicles }}</span>
                             <span class="chart-label">Total Vehicles</span>
                         </div>
                     </div>
@@ -84,14 +84,14 @@
                         </div>
                         <div class="category-content">
                             <h3>{{ category.type_of_vehicle }}</h3>
-                            <span class="category-count">{{ category.total }} vehicles</span> <!-- THIS MUST EXIST -->
+                            <span class="category-count">{{ category.total }} vehicles</span>
                         </div>
                     </a>
                     {% endfor %}
                 </div>
             </div>
         </div>
-        
+
         <!-- Recently Added Vehicles -->
         <div class="recently-added">
             <div class="recent-header">
@@ -428,6 +428,15 @@
                             </button>
                             <button type="reset" class="contact-reset-btn">Reset Form</button>
                         </div>
+
+                        <!-- Raw JSON response box — shown after AJAX submit -->
+                        <div id="contact-json-output" style="display:none; margin-top:16px; background:#1e1e1e; border-radius:10px; padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="color:#d97706; font-size:13px; font-weight:600;"><i class="fas fa-code"></i> &nbsp;JSON Response</span>
+                                <span id="contact-json-status" style="font-size:11px; padding:3px 8px; border-radius:20px; background:#374151; color:#9ca3af;"></span>
+                            </div>
+                            <pre id="contact-json-pre" style="color:#a5f3fc; font-size:12px; margin:0; white-space:pre-wrap; word-break:break-word; font-family:monospace; line-height:1.6;"></pre>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -435,7 +444,7 @@
     </div>
     {% include 'footer.html' %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jQuery — must be loaded BEFORE main.js (Agenda 11) -->
+    <!-- jQuery — must be loaded BEFORE main.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="{% static 'main.js' %}"></script>
 </body>

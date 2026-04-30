@@ -29,4 +29,16 @@ urlpatterns = [
     path('saved/sorted/', views.SavedVehiclesSortedAPI.as_view(), name='api_saved_sorted'),
     path('saved/', views.SavedVehiclesAPI.as_view(), name='api_saved'),
     path('saved/toggle/<int:vehicle_id>/', views.ToggleSaveAPI.as_view(), name='api_toggle_save'),
+
+    path('homepage/featured/', views.FeaturedVehiclesAPI.as_view(), name='api_featured_vehicles'),
+    path('homepage/stats/', views.VehicleStatsAPI.as_view(), name='api_homepage_stats'),
+
+    # ── CONTACT MESSAGE CRUD (added by Rishab — Main app) ────────────────
+    # POST   /api/contact/       → public  (anyone can submit)
+    # GET    /api/contact/       → admin only (list all messages)
+    # GET    /api/contact/<id>/  → admin only (retrieve one)
+    # PATCH  /api/contact/<id>/  → admin only (mark resolved)
+    # DELETE /api/contact/<id>/  → admin only (delete)
+    path('contact/', views.ContactMessageListAPI.as_view(), name='api_contact_list'),
+    path('contact/<int:pk>/', views.ContactMessageDetailAPI.as_view(), name='api_contact_detail'),
 ]

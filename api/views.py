@@ -142,7 +142,7 @@ class UploadVehicleAPI(APIView):
 
         # Determine if rental based on user type
         is_rental = profile.user_type == 'renter'
-
+        
         try:
             vehicle = Vehicle.objects.create(
                 uploader=request.user,
@@ -373,7 +373,6 @@ class NearbyVehiclesAPI(APIView):
             'vehicles':   serializer.data,
         })
 
-
 # ============================================================
 # REVIEW ENDPOINTS
 # ============================================================
@@ -598,3 +597,218 @@ class SavedVehiclesSortedAPI(APIView):
                 * math.cos(math.radians(lat2))
                 * math.sin(dlon / 2) ** 2)
         return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+
+# ============================================================
+# HOMEPAGE SPECIFIC ENDPOINTS
+# ============================================================
+
+class FeaturedVehiclesAPI(APIView):
+    """
+    GET /api/homepage/featured/
+    Returns the latest 6 available vehicles for homepage display.
+    Public endpoint - no authentication required.
+    """
+    def get(self, request):
+        # Get latest 6 available vehicles
+        featured_vehicles = Vehicle.objects.filter(
+            is_sold=False,
+            is_rented=False
+        ).prefetch_related('images').order_by('-id')[:6]
+        
+        serializer = VehicleSerializer(
+            featured_vehicles,
+            many=True,
+            context={'request': request}
+        )
+        
+        return Response({
+            'count': len(featured_vehicles),
+            'vehicles': serializer.data
+        })
+
+
+class VehicleStatsAPI(APIView):
+    """
+    GET /api/homepage/stats/
+    Returns statistics for homepage display.
+    Public endpoint - shows total available vehicles by type.
+    """
+    def get(self, request):
+        from django.db.models import Count
+        
+        total_vehicles = Vehicle.objects.filter(
+            is_sold=False,
+            is_rented=False
+        ).count()
+        
+        vehicles_by_type = Vehicle.objects.filter(
+            is_sold=False,
+            is_rented=False
+        ).values('type_of_vehicle').annotate(
+            count=Count('id')
+        )
+        
+        return Response({
+            'total_available': total_vehicles,
+            'by_type': list(vehicles_by_type)
+        })
+
+# ============================================================
+# CONTACT MESSAGE ENDPOINTS
+# ============================================================
+# Demonstrates full CRUD via Django REST Framework with
+# authentication and permission restrictions.
+#
+# Permissions summary:
+#   POST   /api/contact/          → anyone (AllowAny)
+#   GET    /api/contact/          → admin only (IsAdminUser)
+#   GET    /api/contact/<id>/     → admin only (IsAdminUser)
+#   PATCH  /api/contact/<id>/     → admin only (IsAdminUser)
+#   DELETE /api/contact/<id>/     → admin only (IsAdminUser)
+
+from rest_framework.permissions import IsAdminUser, AllowAny
+from Main.models import ContactMessage
+from Main.serializers import ContactMessageSerializer, ContactMessageUpdateSerializer
+
+
+class ContactMessageListAPI(APIView):
+    """
+    GET  /api/contact/  — List all contact messages (admin only)
+    POST /api/contact/  — Submit a new contact message (public)
+
+    Two different permission classes are applied per HTTP method:
+    - GET  requires IsAdminUser (only staff/superuser can read messages)
+    - POST is open to everyone  (visitors can submit a contact form)
+
+    This is a common real-world pattern: write is public, read is restricted.
+    """
+
+    def get_permissions(self):
+        # Dynamically assign permissions based on the HTTP method
+        if self.request.method == 'POST':
+            return [AllowAny()]          # Anyone can submit a contact form
+        return [IsAuthenticated(), IsAdminUser()]  # Only admins can read all messages
+
+    def get(self, request):
+        """
+        LIST — returns all ContactMessage rows as a JSON array.
+        Demonstrates: JSON PRODUCTION — Django queryset → serializer → JSON response
+        Optional filter: ?resolved=true / ?resolved=false
+        """
+        messages_qs = ContactMessage.objects.all().order_by('-created_at')
+
+        # Optional query param to filter by resolved status
+        resolved = request.GET.get('resolved', '')
+        if resolved.lower() == 'true':
+            messages_qs = messages_qs.filter(is_resolved=True)
+        elif resolved.lower() == 'false':
+            messages_qs = messages_qs.filter(is_resolved=False)
+
+        serializer = ContactMessageSerializer(messages_qs, many=True)
+        # serializer.data is a list of dicts — DRF automatically converts to JSON
+        return Response({
+            'count': messages_qs.count(),
+            'messages': serializer.data,   # JSON PRODUCTION happens here
+        })
+
+    def post(self, request):
+        """
+        CREATE — accepts JSON body and saves a new ContactMessage.
+        Demonstrates: JSON CONSUMPTION — incoming JSON → serializer → validated → DB save
+
+        Body (JSON):
+        {
+            "full_name":    "Alice",
+            "email":        "alice@example.com",
+            "phone":        "+230 5000 0000",
+            "inquiry_type": "general",
+            "subject":      "Test",
+            "message":      "Hello there!"
+        }
+        """
+        # JSON CONSUMPTION: request.data contains the parsed JSON body
+        serializer = ContactMessageSerializer(data=request.data)
+
+        if serializer.is_valid():
+            # Save validated data to database
+            contact = serializer.save()
+            return Response({
+                'message': 'Your message has been received. We will reply within 24 hours.',
+                'id': contact.id,
+                'data': ContactMessageSerializer(contact).data,  # Echo back the created object
+            }, status=status.HTTP_201_CREATED)
+
+        # Validation failed — return field-level errors as JSON
+        return Response({
+            'error': 'Invalid data submitted.',
+            'details': serializer.errors,  # e.g. {"email": ["Enter a valid email address."]}
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ContactMessageDetailAPI(APIView):
+    """
+    GET    /api/contact/<id>/  — Retrieve one message  (admin only)
+    PATCH  /api/contact/<id>/  — Update is_resolved    (admin only)
+    DELETE /api/contact/<id>/  — Delete a message      (admin only)
+
+    All three methods require IsAdminUser — only staff can manage messages.
+    This demonstrates endpoint-level authentication restrictions.
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def _get_object(self, pk):
+        """Helper — fetch message or return 404"""
+        try:
+            return ContactMessage.objects.get(pk=pk)
+        except ContactMessage.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        """
+        RETRIEVE — return a single ContactMessage as JSON.
+        Demonstrates: JSON PRODUCTION for a single object.
+        """
+        obj = self._get_object(pk)
+        if obj is None:
+            return Response({'error': 'Message not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ContactMessageSerializer(obj)
+        return Response(serializer.data)   # Single object JSON production
+
+    def patch(self, request, pk):
+        """
+        PARTIAL UPDATE — admin can mark a message as resolved.
+        Demonstrates: JSON CONSUMPTION (PATCH body) + partial update pattern.
+
+        Body (JSON):
+        { "is_resolved": true }
+        """
+        obj = self._get_object(pk)
+        if obj is None:
+            return Response({'error': 'Message not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # partial=True means only the supplied fields are updated
+        serializer = ContactMessageUpdateSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Contact message updated successfully.',
+                'data': ContactMessageSerializer(obj).data,
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        """
+        DELETE — permanently remove a ContactMessage.
+        Returns 204 No Content on success (standard REST practice).
+        """
+        obj = self._get_object(pk)
+        if obj is None:
+            return Response({'error': 'Message not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        obj.delete()
+        return Response(
+            {'message': f'Contact message {pk} deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT
+        )

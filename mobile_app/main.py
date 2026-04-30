@@ -9,6 +9,7 @@ from screens.saved   import saved_screen
 from screens.reviews import report_vehicle_screen, reviews_screen, report_screen_for_review
 from screens.profile import profile_screen
 from screens.upload  import upload_vehicle_screen, my_vehicles_screen, edit_vehicle_screen
+from screens.support import support_screen
 
 SCREENS = {
     "login":          login_screen,
@@ -24,6 +25,7 @@ SCREENS = {
     "upload_vehicle": upload_vehicle_screen,
     "my_vehicles":    my_vehicles_screen,
     "edit_vehicle":   edit_vehicle_screen,
+    "support":        support_screen,
 }
 
 
