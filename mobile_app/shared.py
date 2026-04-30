@@ -94,6 +94,17 @@ class API:
         except:
             return 201, {}
 
+    def contact_support(self, data):
+        """
+        POST /api/contact/
+        Sends a contact/support message to the Django REST API.
+        Public endpoint — no token required.
+        data = { full_name, email, inquiry_type, subject, message }
+        Returns (status_code, response_json)
+        """
+        r = requests.post(f"{BASE_URL}/contact/", json=data, timeout=10)
+        return r.status_code, r.json()
+
 # Global API instance — import this in every screen
 api = API()
 

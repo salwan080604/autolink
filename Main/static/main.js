@@ -8,6 +8,7 @@
 //   3. element.addEventListener() → .on() / .click()
 //   4. Contact form → AJAX submission (no page reload)
 //   5. Live vehicle search → AJAX $.ajax() call
+//   6. Homepage Stats & Featured Vehicles → REST API consumption
 // ─────────────────────────────────────────────────────────────
 
 // ── CSRF SETUP (required for all POST AJAX requests) ─────────
@@ -87,6 +88,34 @@ function initCategoryChart() {
                 duration:      2000,
                 easing:        'easeOutQuart'
             }
+        }
+    });
+}
+
+
+// ── LIVE STATS via REST API → updates donut chart center ─────
+// Instead of a separate banner, the REST API stats are used to
+// refresh the donut chart's center total and enrich the tooltip.
+// Demonstrates: REST API consumption, JSON parsing, live DOM update.
+function loadStats() {
+    $.ajax({
+        url:      '/api/homepage/stats/',
+        type:     'GET',
+        dataType: 'json',
+        success: function(data) {
+            console.log('✅ Stats loaded via REST API:', data);
+
+            // JSON CONSUMPTION — update the donut chart center live
+            // data.total_available is the real-time count from the API
+            $('#chart-live-total').text(data.total_available);
+
+            // Also store the by_type breakdown so the chart tooltip can use it
+            // This enriches the existing Chart.js donut with live API data
+            window._liveStats = data.by_type;
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error loading stats from REST API:', error);
+            // Silently fail — the chart already shows the server-rendered total
         }
     });
 }
@@ -253,15 +282,13 @@ function initLiveSearch() {
                         $results.append($item);
                     });
 
-                    // Add View JSON link + see all results
+                   // Store query for JSON shortcut
+                    window._lastSearchQuery = query;
+
+                    // Add see all results link
                     $results.append(
-                        '<div class="search-footer">' +
-                            '<a href="/ajax/search/?q=' + encodeURIComponent(query) +
-                            '" target="_blank" class="search-view-json">' +
-                            '<i class="fas fa-code"></i> View JSON</a>' +
-                            '<a href="/vehicles/standardsearch/?search=' + encodeURIComponent(query) +
-                            '" class="search-see-all">See all results <i class="fas fa-arrow-right"></i></a>' +
-                        '</div>'
+                        '<a href="/vehicles/standardsearch/?search=' + encodeURIComponent(query) +
+                        '" class="search-see-all">See all results <i class="fas fa-arrow-right"></i></a>'
                     );
                 },
                 error: function() {
@@ -287,57 +314,68 @@ function initLiveSearch() {
 
 // ── CONTACT FORM — AJAX SUBMISSION ───────────────────────────
 // e.preventDefault() stops normal page reload
-// $.ajax POST sends form data and shows response without reload
-// This demonstrates: form.submit(), e.preventDefault(), $.ajax POST
+// FormData is used instead of .serialize() so that file attachments
+// are correctly included in the POST request.
+// This demonstrates: form.submit(), e.preventDefault(), $.ajax POST,
+// JSON consumption of the server response, and FormData for file uploads.
 function initContactForm() {
     $('.contact-form').on('submit', function(e) {
-        e.preventDefault();  // MANDATORY — stops page reload (Agenda 13)
+        e.preventDefault();  // MANDATORY — stops normal page reload
 
-        var $form   = $(this);
-        var $btn    = $form.find('.contact-submit-btn');
-        var $msg    = $('#contact-ajax-message');
+        var $form       = $(this);
+        var $btn        = $form.find('.contact-submit-btn');
+        var $msg        = $('#contact-ajax-message');
+        var $jsonBox    = $('#contact-json-output');
+        var $jsonPre    = $('#contact-json-pre');
+        var $jsonStatus = $('#contact-json-status');
 
-        // Disable button while submitting
         $btn.prop('disabled', true).html(
             '<i class="fas fa-spinner fa-spin"></i> Sending...'
         );
 
-        // .serialize() converts all form fields to query string
-        // and automatically includes CSRF token
+        // FormData captures file inputs too — .serialize() would drop them
+        var formData = new FormData($form[0]);
+
         $.ajax({
-            url:     '/ajax/contact/',
-            type:    'POST',
-            data:    $form.serialize(),
+            url:         '/ajax/contact/',
+            type:        'POST',
+            data:        formData,
+            processData: false,   // do NOT convert FormData to query string
+            contentType: false,   // let the browser set multipart boundary
             success: function(response) {
+                // JSON CONSUMPTION — response is a parsed JS object from Django
                 if (response.success) {
-                    // Show success message dynamically — no page reload
                     $msg.removeClass('contact-error')
                         .addClass('contact-success')
                         .html('<i class="fas fa-check-circle"></i> ' + response.message)
                         .fadeIn(400);
-
-                    $form[0].reset();  // Clear form fields
-
-                    // Hide message after 5 seconds
+                    $form[0].reset();
                     setTimeout(function() { $msg.fadeOut(400); }, 5000);
                 }
+                // Show raw JSON response below the form
+                $jsonStatus.css({background:'#166534', color:'#bbf7d0'}).text('200 OK');
+                $jsonPre.text(JSON.stringify(response, null, 2));
+                $jsonBox.slideDown(300);
             },
             error: function(xhr) {
+                // JSON CONSUMPTION — read error object returned by Django
                 var response = xhr.responseJSON;
                 var errorMsg = 'Please fix the errors below.';
-
                 if (response && response.errors) {
-                    // Display field errors returned from Django
                     errorMsg = Object.values(response.errors).join(' ');
+                } else if (response && response.message) {
+                    errorMsg = response.message;
                 }
-
                 $msg.removeClass('contact-success')
                     .addClass('contact-error')
                     .html('<i class="fas fa-exclamation-circle"></i> ' + errorMsg)
                     .fadeIn(400);
+                // Show raw error JSON
+                $jsonStatus.css({background:'#991b1b', color:'#fecaca'}).text(xhr.status + ' Error');
+                $jsonPre.text(JSON.stringify(response || {error: 'Unknown error'}, null, 2));
+                $jsonBox.slideDown(300);
             },
             complete: function() {
-                // Re-enable button regardless of success/error
                 $btn.prop('disabled', false).html(
                     'Send Message <i class="fas fa-paper-plane"></i>'
                 );
@@ -347,15 +385,86 @@ function initContactForm() {
 }
 
 
+// ── LOGIN PROMPT (placeholder) ────────────────────────────────
+function initLoginPrompt() {}
+
+
+// ── PATCH / DELETE DEMO ───────────────────────────────────────
+// Demonstrates authentication-restricted REST endpoints.
+// PATCH marks a ContactMessage as resolved (admin only).
+// DELETE removes a ContactMessage (admin only).
+// Both show the raw JSON response — or 403 if not admin.
+function initPatchDelete() {
+
+    function showResult(statusCode, data, method) {
+        var $out    = $('#patch-delete-output');
+        var $status = $('#patch-delete-status');
+        var $pre    = $('#patch-delete-pre');
+
+        var isOk = statusCode < 400;
+        $status.css({
+            background: isOk ? '#166534' : '#991b1b',
+            color:      isOk ? '#bbf7d0' : '#fecaca',
+        }).text(statusCode + ' ' + (isOk ? '✅' : '❌'));
+
+        $pre.text(
+            '// ' + method + ' /api/contact/<id>/\n\n' +
+            JSON.stringify(data, null, 2)
+        );
+        $out.slideDown(300);
+    }
+
+    // ── PATCH — mark message as resolved ────────────────────
+    $('#patch-btn').on('click', function() {
+        var id = $('#patch-delete-id').val().trim();
+        if (!id) { alert('Enter a message ID first.'); return; }
+
+        $.ajax({
+            url:         '/api/contact/' + id + '/',
+            type:        'PATCH',
+            contentType: 'application/json',
+            // JSON body — tells Django to set is_resolved = true
+            data:        JSON.stringify({ is_resolved: true }),
+            success: function(response) {
+                showResult(200, response, 'PATCH');
+            },
+            error: function(xhr) {
+                // 403 = not admin, 404 = wrong ID
+                showResult(xhr.status, xhr.responseJSON || {}, 'PATCH');
+            }
+        });
+    });
+
+    // ── DELETE — remove a message entirely ──────────────────
+    $('#delete-btn').on('click', function() {
+        var id = $('#patch-delete-id').val().trim();
+        if (!id) { alert('Enter a message ID first.'); return; }
+
+        if (!confirm('Delete message #' + id + '? This cannot be undone.')) return;
+
+        $.ajax({
+            url:  '/api/contact/' + id + '/',
+            type: 'DELETE',
+            success: function(response) {
+                showResult(204, response || { message: 'Deleted successfully.' }, 'DELETE');
+            },
+            error: function(xhr) {
+                showResult(xhr.status, xhr.responseJSON || {}, 'DELETE');
+            }
+        });
+    });
+}
+
+
 // ── $(document).ready() ──────────────────────────────────────
-// jQuery equivalent of DOMContentLoaded
-// Ensures all elements exist before running code
 $(function() {
     if ($('#categoryChart').length) {
         initCategoryChart();
+        loadStats();   // REST API call — updates chart center total live
     }
     initTestimonialsCarousel();
     initLiveSearch();
     initContactForm();
     initLoginPrompt();
+    initPatchDelete();
 });
