@@ -1,6 +1,3 @@
-# mobile_app/screens/support.py
-# ─────────────────────────────────────────────────────────────
-# Contact / Support screen
 # Demonstrates: consuming the /api/contact/ REST API from Flet
 #   - User fills in the form
 #   - Flet calls api.contact_support(data) which does a POST

@@ -13,9 +13,8 @@ from shared import (
     CENTER, SUCCESS, BASE_URL
 )
 
-
 # ══════════════════════════════════════════════════════════════
-# CUSTOM VEHICLE CARD — @ft.control (Agenda 17)
+# CUSTOM VEHICLE CARD — @ft.control 
 # ══════════════════════════════════════════════════════════════
 @ft.control
 class VehicleCard(ft.GestureDetector):
@@ -93,9 +92,8 @@ class VehicleCard(ft.GestureDetector):
         self.content = self._build()
         self.update()
 
-
 # ══════════════════════════════════════════════════════════════
-# ASYNC API HELPERS — httpx (Agenda 19)
+# ASYNC API HELPERS — httpx 
 # ══════════════════════════════════════════════════════════════
 async def fetch_vehicles(search="", vtype=""):
     params = {}
@@ -119,7 +117,6 @@ async def async_toggle_save(vehicle_id):
             headers=api.h(), timeout=10,
         )
         return r.json()
-
 
 # ══════════════════════════════════════════════════════════════
 # HOME SCREEN
@@ -167,7 +164,6 @@ def home_screen(page, go_to):
         opts = [("All", None), ("For Sale", False), ("For Rent", True)]
         for i, (lbl, val) in enumerate(opts):
             active = rental_ref["val"] == val
-            # Border radius: left pill, middle, right pill
             if i == 0:
                 br = ft.border_radius.only(top_left=10, bottom_left=10)
             elif i == 2:
@@ -430,7 +426,7 @@ def home_screen(page, go_to):
         # Update result count
         result_count.value = f"{len(vehicles)} vehicle(s)"
 
-        # No results animation
+        # No results
         if not vehicles:
             col.controls.append(
                 ft.Container(
@@ -598,11 +594,7 @@ def home_screen(page, go_to):
 
     # ── LIVE SEARCH ───────────────────────────────────────────
     def on_search_change(e):
-        if search_timer["t"]: search_timer["t"].cancel()
-        import threading as th
-        def trigger(): page.run_task(load)
-        t = th.Timer(0.4, trigger)
-        search_timer["t"] = t; t.start()
+        page.run_task(load)
     search_f.on_change = on_search_change
 
     # ── INITIAL LOAD ──────────────────────────────────────────
@@ -733,6 +725,19 @@ def home_screen(page, go_to):
                     ft.Row([spin], alignment=ft.MainAxisAlignment.CENTER),
                     status, col,
                     ft.Container(height=24),
+
+                    # ── CONTACT SUPPORT LINK ──────────────────
+                    ft.Row([
+                        ft.TextButton(
+                            content=ft.Row([
+                                ft.Icon(ft.Icons.HEADSET_MIC, size=16, color=PRIMARY),
+                                ft.Text("Contact Support", size=13, color=PRIMARY),
+                            ], spacing=6),
+                            on_click=lambda e: go_to("support"),
+                        )
+                    ], alignment=ft.MainAxisAlignment.CENTER),
+
+                    ft.Container(height=16),
                 ], spacing=0),
                 padding=ft.padding.symmetric(horizontal=16),
             ),

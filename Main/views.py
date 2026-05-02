@@ -1,5 +1,3 @@
-# Main/views.py
-# ─────────────────────────────────────────────────────────────
 # Changes made:
 #   1. Added ajax_vehicle_search view — returns JsonResponse
 #   2. Added ajax_contact view — handles AJAX contact form POST
