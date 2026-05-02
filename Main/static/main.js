@@ -1,5 +1,3 @@
-// Main/static/main.js
-// ─────────────────────────────────────────────────────────────
 // CONVERTED FROM PLAIN JS TO JQUERY
 // Changes:
 //   1. document.addEventListener('DOMContentLoaded') 
@@ -91,7 +89,6 @@ function initCategoryChart() {
         }
     });
 }
-
 
 // ── LIVE STATS via REST API → updates donut chart center ─────
 // Instead of a separate banner, the REST API stats are used to
@@ -215,7 +212,6 @@ function initTestimonialsCarousel() {
     updateCarousel();
 }
 
-
 // ── LIVE VEHICLE SEARCH (AJAX) ───────────────────────────────
 // Fetches vehicles from /main/ajax/search/?q=... as user types
 // Displays results below the search box without page reload
@@ -311,7 +307,6 @@ function initLiveSearch() {
     });
 }
 
-
 // ── CONTACT FORM — AJAX SUBMISSION ───────────────────────────
 // e.preventDefault() stops normal page reload
 // FormData is used instead of .serialize() so that file attachments
@@ -388,12 +383,10 @@ function initContactForm() {
 // ── LOGIN PROMPT (placeholder) ────────────────────────────────
 function initLoginPrompt() {}
 
-
 // ── PATCH / DELETE DEMO ───────────────────────────────────────
 // Demonstrates authentication-restricted REST endpoints.
 // PATCH marks a ContactMessage as resolved (admin only).
 // DELETE removes a ContactMessage (admin only).
-// Both show the raw JSON response — or 403 if not admin.
 function initPatchDelete() {
 
     function showResult(statusCode, data, method) {
