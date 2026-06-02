@@ -3,7 +3,8 @@
   "builds": [
     {
       "src": "Autolink/wsgi.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb" }
     }
   ],
   "routes": [
@@ -11,5 +12,8 @@
       "src": "/(.*)",
       "dest": "Autolink/wsgi.py"
     }
-  ]
+  ],
+  "commands": {
+    "build": "python manage.py collectstatic --noinput"
+  }
 }
